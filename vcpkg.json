@@ -1,0 +1,6 @@
+{
+  "name": "telegramfs",
+  "version-string": "0.1.0",
+  "builtin-baseline": "eb890efcc08f8daafa202c584e88217a92240222",
+  "dependencies": ["tdlib"]
+}

@@ -1,0 +1,23 @@
+[filesystem]
+mount_point = "T:"
+auto_mount = false
+read_only = false
+
+[telegram]
+channel_id = 0
+import_channels = []
+parallel_downloads = 4
+parallel_uploads = 4
+poll_seconds = 60
+
+[cache]
+memory_limit_mb = 64
+disk_limit_gb = 10
+prefetch = true
+write_back = true
+
+[security]
+encryption = true
+
+[logging]
+level = "error"

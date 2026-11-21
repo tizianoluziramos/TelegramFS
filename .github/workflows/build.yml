@@ -1,0 +1,29 @@
+name: Build TelegramFS
+
+on:
+  push:
+    tags: ['**']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/checkout@v6
+        with:
+          repository: winfsp/winfsp
+          ref: v2.1
+          path: winfsp
+
+      - run: ./build.ps1 -WinFspInclude "$env:GITHUB_WORKSPACE\winfsp\inc"
+
+      - run: Compress-Archive -Path build/dist/* -DestinationPath TelegramFS-windows-x64.zip
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: TelegramFS-windows-x64.zip
+          fail_on_unmatched_files: true

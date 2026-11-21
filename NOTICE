@@ -1,0 +1,16 @@
+TelegramFS implements interoperability with storage formats from DriveInfinity
+(https://github.com/ZHINFINITY/DriveInfinity, revision
+8a17d352802b8229038ce78363e670ace45c0c55), derived from work by Mahmudul Hasan
+Khan (Mahmud0808 / DrDisagree). DriveInfinity is licensed under Apache-2.0.
+
+WinFsp - Windows File System Proxy, Copyright (C) Bill Zissimopoulos
+https://github.com/winfsp/winfsp
+
+The optional bundled runtime is tdlib.native.win-x64 1.8.70 (Boost Software
+License 1.0). It contains TDLib by the TDLib authors, packaged by the
+tdlib.native contributors (https://github.com/ForNeVeR/tdlib.native). The
+package uses TDLib revision 23383aef218a3123f02b744bfa91bde21056a814.
+
+The runtime includes OpenSSL 3.6.5 (1998–2026 The OpenSSL Project Authors,
+1995–1998 Eric A. Young and Tim J. Hudson) and zlib 1.3.2 (Jean-loup Gailly
+and Mark Adler). The corresponding terms are in licenses/.
