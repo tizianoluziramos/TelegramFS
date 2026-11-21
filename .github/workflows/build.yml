@@ -19,7 +19,18 @@ jobs:
           ref: v2.1
           path: winfsp
 
-      - run: ./build.ps1 -WinFspInclude "$env:GITHUB_WORKSPACE\winfsp\inc"
+      - uses: actions/checkout@v6
+        with:
+          repository: microsoft/vcpkg
+          ref: eb890efcc08f8daafa202c584e88217a92240222
+          path: vcpkg
+          fetch-depth: 0
+
+      - run: |
+          $vcpkgRoot = Join-Path $env:GITHUB_WORKSPACE "vcpkg"
+          & "$vcpkgRoot\bootstrap-vcpkg.bat" -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./build.ps1 -WinFspInclude "$env:GITHUB_WORKSPACE\winfsp\inc" -VcpkgRoot $vcpkgRoot
 
       - run: Compress-Archive -Path build/dist/* -DestinationPath TelegramFS-windows-x64.zip
 
