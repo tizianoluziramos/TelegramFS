@@ -337,16 +337,25 @@ void Telegram::search(int64_t chat, std::string_view query,
         std::lock_guard lock(mutex_);
         opened_chats_.insert(chat);
     }
+    // Walk the chat history directly when there is no text to search for.
+    const bool history = query.empty();
     int64_t from = 0;
     for (;;) {
-        auto q = obj("searchChatMessages");
-        q.update({{"chat_id", chat}, {"query", query}, {"from_message_id", from}, {"limit", 100}});
+        auto q = obj(history ? "getChatHistory" : "searchChatMessages");
+        q.update({{"chat_id", chat}, {"from_message_id", from}, {"limit", 100}});
+        if (history) q["only_local"] = false;
+        else q["query"] = query;
         const auto page = request(std::move(q));
+        auto next = page.value("next_from_message_id", int64_t{0});
         for (const auto& message : page.at("messages")) {
+            if (history) {
+                const auto id = message.at("id").get<int64_t>();
+                if (from && id >= from) continue;
+                next = id;
+            }
             if (type_of(message.at("content")) == "messageDocument" &&
                 message.value("sending_state", Json{}).is_null() && !visitor(document(message))) return;
         }
-        const int64_t next = page.value("next_from_message_id", int64_t{0});
         if (!next) break;
         if (from && next >= from) throw std::runtime_error("Telegram returned a non-advancing search cursor");
         from = next;

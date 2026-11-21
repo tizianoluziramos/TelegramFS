@@ -992,8 +992,7 @@ std::optional<Store::Commit> Store::remote_index() {
         result = Commit{std::string(id), std::string(parent), doc};
         return false;
     };
-    tg_.search(config_.channel, "telegramfsindex", inspect);
-    if (!result && !initialized_) tg_.search(config_.channel, "", inspect);
+    tg_.search(config_.channel, "", inspect);
     return result;
 }
 
@@ -1295,7 +1294,7 @@ void Store::sync() {
         bool descendant = local_head.empty() || local_head == remote->parent;
         if (!descendant) {
             auto ancestor = remote->parent;
-            tg_.search(config_.channel, "telegramfsindex", [&](const Doc& doc) {
+            tg_.search(config_.channel, "", [&](const Doc& doc) {
                 if (ancestor == local_head) { descendant = true; return false; }
                 if (doc.name != "telegramfsindex.bin" || !doc.caption.starts_with(index_tag)) return true;
                 const auto caption = std::string_view(doc.caption).substr(index_tag.size());

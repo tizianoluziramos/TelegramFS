@@ -291,7 +291,7 @@ void key_command(Config& config, Telegram& tg, bool restore, std::optional<int64
     if (existing && !fs::exists(path)) throw std::runtime_error("A recovery document already exists. Run key-restore");
     if (!fs::exists(path)) {
         bool has_index = false;
-        tg.search(id, "telegramfsindex", [&](const Doc& doc) {
+        tg.search(id, "", [&](const Doc& doc) {
             if (!doc.caption.starts_with(index_tag)) return true;
             has_index = true;
             return false;
