@@ -1,5 +1,7 @@
 #pragma once
 #include "store.hpp"
+#include <winternl.h>
+using PNTSTATUS = NTSTATUS*;
 #ifdef __MINGW32__
 #undef _ReadWriteBarrier
 #endif
