@@ -1,5 +1,6 @@
 #include "telegram.hpp"
 #include "crypto.hpp"
+#include <td/telegram/td_json_client.h>
 #include <charconv>
 #include <iostream>
 
@@ -15,12 +16,6 @@ Doc document(const Json& message) {
         1000 * message.value("date", int64_t{0}), media.value("file_name", std::string{}),
         content.at("caption").value("text", std::string{}),
         file.at("remote").value("unique_id", std::string{})};
-}
-
-template<class T> T symbol(HMODULE dll, const char* name) {
-    const auto value = GetProcAddress(dll, name);
-    if (!value) throw WinError(GetLastError(), std::string("TDLib symbol: ") + name);
-    return reinterpret_cast<T>(value);
 }
 }
 
@@ -55,28 +50,19 @@ void save_api_credentials(const Config& config, int id, std::string_view hash) {
 
 Telegram::Telegram(Config config)
     : config_(std::move(config)), downloads_(config_.downloads), uploads_(config_.uploads) {
-    auto path = exe_path().parent_path() / L"tdjson.dll";
-    dll_ = LoadLibraryExW(path.c_str(), nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
-    if (!dll_) throw WinError(GetLastError(), "Load tdjson.dll and its dependencies beside telegramfs.exe");
     try {
-        create_ = symbol<decltype(create_)>(dll_, "td_create_client_id");
-        send_ = symbol<decltype(send_)>(dll_, "td_send");
-        receive_ = symbol<decltype(receive_)>(dll_, "td_receive");
-        execute_ = symbol<decltype(execute_)>(dll_, "td_execute");
-        execute_(R"({"@type":"setLogVerbosityLevel","new_verbosity_level":0})");
-        client_ = create_();
+        td_execute(R"({"@type":"setLogVerbosityLevel","new_verbosity_level":0})");
+        client_ = td_create_client_id();
         receiver_ = std::jthread([this](std::stop_token token) { receive_loop(token); });
         send(obj("getAuthorizationState"));
     } catch (...) {
         close_client();
-        FreeLibrary(dll_);
         throw;
     }
 }
 
 Telegram::~Telegram() {
     close_client();
-    FreeLibrary(dll_);
 }
 
 void Telegram::close_client() noexcept {
@@ -100,13 +86,13 @@ void Telegram::stop_io() {
 void Telegram::send(Json query) {
     std::string encoded = query.dump();
     Finally wipe{[&] { SecureZeroMemory(encoded.data(), encoded.size()); }};
-    send_(client_, encoded.c_str());
+    td_send(client_, encoded.c_str());
 }
 
 void Telegram::receive_loop(std::stop_token stop) {
     while (!stop.stop_requested()) {
         try {
-            if (const char* raw = receive_(0.25)) {
+            if (const char* raw = td_receive(0.25)) {
                 auto value = Json::parse(raw);
                 if (value.value("@client_id", client_) == client_) accept(std::move(value));
             }

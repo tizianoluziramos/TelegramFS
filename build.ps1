@@ -1,6 +1,6 @@
 param(
     [string]$WinFspInclude = "${env:ProgramFiles(x86)}\WinFsp\inc",
-    [string]$TdLibBin = ""
+    [string]$VcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
 )
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -12,6 +12,14 @@ function Invoke-Native {
     if ($LASTEXITCODE -ne 0) { throw "$Program exited with $LASTEXITCODE" }
 }
 
-Invoke-Native cmake @("-S", $root, "-B", $build, "-A", "x64", "-DWINFSP_INCLUDE_DIR=$WinFspInclude", "-DTELEGRAMFS_TDLIB_BIN=$TdLibBin", "-DTELEGRAMFS_PACKAGE_RUNTIME=ON")
+if (-not $VcpkgRoot) { throw "Set VCPKG_INSTALLATION_ROOT or pass -VcpkgRoot" }
+$toolchain = Join-Path $VcpkgRoot "scripts/buildsystems/vcpkg.cmake"
+
+Invoke-Native cmake @(
+    "-S", $root, "-B", $build, "-A", "x64",
+    "-DWINFSP_INCLUDE_DIR=$WinFspInclude",
+    "-DCMAKE_TOOLCHAIN_FILE=$toolchain",
+    "-DVCPKG_TARGET_TRIPLET=x64-windows-static"
+)
 Invoke-Native cmake @("--build", $build, "--config", "Release", "--parallel")
 Invoke-Native cmake @("--install", $build, "--config", "Release", "--prefix", "$build/dist")

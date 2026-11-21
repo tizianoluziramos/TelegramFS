@@ -65,12 +65,7 @@ private:
     void note_rate(const std::string&);
 
     Config config_;
-    HMODULE dll_ = nullptr;
     int client_ = 0;
-    int (*create_)() = nullptr;
-    void (*send_)(int, const char*) = nullptr;
-    const char* (*receive_)(double) = nullptr;
-    const char* (*execute_)(const char*) = nullptr;
     std::jthread receiver_;
     std::atomic<bool> closing_{false}, stopped_{false}, connected_{false};
     std::atomic<uint64_t> seq_{0}, changes_{0};
